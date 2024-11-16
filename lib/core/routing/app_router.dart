@@ -1,6 +1,6 @@
 import 'package:booking_room/core/admin/add_new_room.dart';
-import 'package:booking_room/core/admin/admin.dart';
-import 'package:booking_room/core/admin/request_screen.dart';
+import 'package:booking_room/core/admin/admin_home_screen.dart';
+import 'package:booking_room/core/admin/super_admin_home_screen.dart';
 import 'package:booking_room/core/routing/routes.dart';
 import 'package:booking_room/features/home/home_screen.dart';
 import 'package:booking_room/features/login/ui/registration_screen.dart';
@@ -45,7 +45,11 @@ class AppRouter {
         );
       case Routes.adminHomeScreen:
         return MaterialPageRoute(
-          builder: (_) => const AdminBookingRequestsScreen(),
+          builder: (_) =>  const HomeScreenAdmin(),
+        );
+        case Routes.superAdminHomeScreen:
+        return MaterialPageRoute(
+          builder: (_) =>  const SuperHomeScreenAdmin(),
         );
 
       default:

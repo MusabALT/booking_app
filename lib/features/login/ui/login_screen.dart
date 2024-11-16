@@ -99,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     context, '/adminHomeScreen');
                               } else if (user.role == 'superAdmin') {
                                 Navigator.pushReplacementNamed(
-                                    context, '/addNewRoom');
+                                    context, '/superAdminHomeScreen');
                               } else {
                                 Navigator.pushReplacementNamed(
                                     context, '/homeScreen');

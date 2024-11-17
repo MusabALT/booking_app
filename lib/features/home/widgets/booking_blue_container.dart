@@ -27,30 +27,21 @@ class BookingBlueContainer extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('You can\nbook now!',
+                Text(' ',
                     style: TextStyles.font18WhiteMedium,
                     textAlign: TextAlign.start),
                 verticalSpace(16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(48.0),
-                      ),
-                    ),
-                    child:
-                        Text('Book Now', style: TextStyles.font12BlueRegular),
-                  ),
-                )
               ],
             ),
           ),
           Positioned(
             right: -10,
             top: 0,
-            child: Image.asset('assets/images/home.png', height: 200.h),
+            child: Image.asset(
+              'assets/images/home.png',
+              height: 250.h,
+              width: 400,
+            ),
           )
         ],
       ),

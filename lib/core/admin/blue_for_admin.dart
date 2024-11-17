@@ -37,7 +37,8 @@ class adminBookingBlueContainer extends StatelessWidget {
           Positioned(
             right: -10,
             top: 0,
-            child: Image.asset('assets/images/home.png', height: 200.h),
+            child: Image.asset('assets/images/admin.png',
+                height: 400.h, width: 400),
           )
         ],
       ),

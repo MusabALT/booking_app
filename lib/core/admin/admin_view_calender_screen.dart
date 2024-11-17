@@ -1,3 +1,4 @@
+import 'package:booking_room/core/admin/blue_calendar.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -15,7 +16,7 @@ class _AdminCalendarScreenState extends State<AdminCalendarScreen> {
   late DateTime _selectedDay;
   Map<DateTime, List<Map<String, dynamic>>> _events = {};
   bool _isLoading = true;
-  CalendarFormat _calendarFormat = CalendarFormat.twoWeeks;
+  CalendarFormat _calendarFormat = CalendarFormat.month;
 
   @override
   void initState() {
@@ -143,225 +144,238 @@ class _AdminCalendarScreenState extends State<AdminCalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Text(
-              DateFormat('MMMM yyyy').format(_focusedDay),
-              style: const TextStyle(fontSize: 20),
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Row(
+            children: [
+              Text(
+                DateFormat('MMMM yyyy').format(_focusedDay),
+                style: const TextStyle(fontSize: 20),
+              ),
+            ],
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _fetchBookingRequests,
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _fetchBookingRequests,
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                TableCalendar(
-                  firstDay: DateTime.utc(2020, 1, 1),
-                  lastDay: DateTime.utc(2030, 12, 31),
-                  focusedDay: _focusedDay,
-                  selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                  calendarFormat: _calendarFormat,
-                  availableCalendarFormats: const {
-                    CalendarFormat.month: 'Month',
-                    CalendarFormat.twoWeeks: '2 weeks',
-                    CalendarFormat.week: 'Week',
-                  },
-                  onFormatChanged: (format) {
-                    setState(() {
-                      _calendarFormat = format;
-                    });
-                  },
-                  eventLoader: _getEventsForDay,
-                  calendarStyle: const CalendarStyle(
-                    markerDecoration: BoxDecoration(
-                      shape: BoxShape.circle,
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                children: [
+                  TableCalendar(
+                    firstDay: DateTime.utc(2020, 1, 1),
+                    lastDay: DateTime.utc(2030, 12, 31),
+                    focusedDay: _focusedDay,
+                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                    calendarFormat: _calendarFormat,
+                    availableCalendarFormats: const {
+                      CalendarFormat.month: 'Month',
+                      CalendarFormat.twoWeeks: '2 weeks',
+                      CalendarFormat.week: 'Week',
+                    },
+                    onFormatChanged: (format) {
+                      setState(() {
+                        _calendarFormat = format;
+                      });
+                    },
+                    eventLoader: _getEventsForDay,
+                    calendarStyle: const CalendarStyle(
+                      markerDecoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                      ),
+                      todayDecoration: BoxDecoration(
+                        color: Colors.blueAccent,
+                        shape: BoxShape.circle,
+                      ),
                     ),
-                    todayDecoration: BoxDecoration(
-                      color: Colors.blueAccent,
-                      shape: BoxShape.circle,
+                    onDaySelected: (selectedDay, focusedDay) {
+                      setState(() {
+                        _selectedDay = selectedDay;
+                        _focusedDay = focusedDay;
+                      });
+                    },
+                    onPageChanged: (focusedDay) {
+                      setState(() {
+                        _focusedDay = focusedDay;
+                      });
+                    },
+                    headerStyle: HeaderStyle(
+                      titleCentered: true,
+                      formatButtonVisible: true,
+                      formatButtonShowsNext: false,
+                      formatButtonDecoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      formatButtonTextStyle: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                      ),
+                      leftChevronIcon: const Icon(Icons.chevron_left),
+                      rightChevronIcon: const Icon(Icons.chevron_right),
+                      titleTextStyle: const TextStyle(fontSize: 17),
                     ),
-                  ),
-                  onDaySelected: (selectedDay, focusedDay) {
-                    setState(() {
-                      _selectedDay = selectedDay;
-                      _focusedDay = focusedDay;
-                    });
-                  },
-                  onPageChanged: (focusedDay) {
-                    setState(() {
-                      _focusedDay = focusedDay;
-                    });
-                  },
-                  headerStyle: HeaderStyle(
-                    titleCentered: true,
-                    formatButtonVisible: true,
-                    formatButtonShowsNext: false,
-                    formatButtonDecoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    formatButtonTextStyle: TextStyle(
-                      color: Theme.of(context).primaryColor,
-                    ),
-                    leftChevronIcon: const Icon(Icons.chevron_left),
-                    rightChevronIcon: const Icon(Icons.chevron_right),
-                    titleTextStyle: const TextStyle(fontSize: 17),
-                  ),
-                  calendarBuilders: CalendarBuilders(
-                    markerBuilder: (context, date, events) {
-                      if (events.isNotEmpty) {
-                        final eventList = events.cast<Map<String, dynamic>>();
-                        final status = eventList.first['status'] as String;
-                        final statusColor = _getStatusColor(status);
+                    calendarBuilders: CalendarBuilders(
+                      markerBuilder: (context, date, events) {
+                        if (events.isNotEmpty) {
+                          final eventList = events.cast<Map<String, dynamic>>();
+                          final status = eventList.first['status'] as String;
+                          final statusColor = _getStatusColor(status);
 
-                        return Container(
-                          margin: const EdgeInsets.all(4),
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: statusColor.withOpacity(0.3),
-                            shape: BoxShape.circle,
-                          ),
-                          width: 16,
-                          height: 16,
-                          child: Center(
-                            child: Text(
-                              events.length.toString(),
-                              style: TextStyle(
-                                color: statusColor,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
+                          return Container(
+                            margin: const EdgeInsets.all(4),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: statusColor.withOpacity(0.3),
+                              shape: BoxShape.circle,
+                            ),
+                            width: 16,
+                            height: 16,
+                            child: Center(
+                              child: Text(
+                                events.length.toString(),
+                                style: TextStyle(
+                                  color: statusColor,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      }
-                      return null;
-                    },
+                          );
+                        }
+                        return null;
+                      },
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: _getEventsForDay(_selectedDay).length,
-                    itemBuilder: (context, index) {
-                      final event = _getEventsForDay(_selectedDay)[index];
-                      final status = event['status'] as String;
-                      final requestTime = event['requestTime'] as DateTime;
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: _getEventsForDay(_selectedDay).length,
+                      itemBuilder: (context, index) {
+                        final event = _getEventsForDay(_selectedDay)[index];
+                        final status = event['status'] as String;
+                        final requestTime = event['requestTime'] as DateTime;
 
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        child: ExpansionTile(
-                          title: Text(
-                            'Room: ${event['roomName']}',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 4),
-                              Text(
-                                'Date: ${DateFormat('MMM dd, yyyy').format(_selectedDay)}',
+                        return Card(
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          child: ExpansionTile(
+                            title: Text(
+                              'Room: ${event['roomName']}',
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Date: ${DateFormat('MMM dd, yyyy').format(_selectedDay)}',
+                                ),
+                                Text(
+                                  'Time: ${event['bookingTimeString']}',
+                                ),
+                              ],
+                            ),
+                            trailing: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
                               ),
-                              Text(
-                                'Time: ${event['bookingTimeString']}',
+                              decoration: BoxDecoration(
+                                color: _getStatusColor(status),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                status.toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Request Details',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text('Floor: ${event['floor']}'),
+                                    Text('Price: \$${event['price']}'),
+                                    Text(
+                                      'Requested: ${DateFormat('MMM dd, yyyy HH:mm').format(requestTime)}',
+                                    ),
+                                    Text('User ID: ${event['userId']}'),
+                                    const SizedBox(height: 16),
+                                    if (status == 'pending')
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          ElevatedButton.icon(
+                                            onPressed: () =>
+                                                _handleBookingAction(
+                                              context,
+                                              event['docId'],
+                                              event['roomId'],
+                                              'approved',
+                                            ),
+                                            icon: const Icon(Icons.check,
+                                                color: Colors.white),
+                                            label: const Text('Approve'),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.green,
+                                              foregroundColor: Colors.white,
+                                            ),
+                                          ),
+                                          ElevatedButton.icon(
+                                            onPressed: () =>
+                                                _handleBookingAction(
+                                              context,
+                                              event['docId'],
+                                              event['roomId'],
+                                              'rejected',
+                                            ),
+                                            icon: const Icon(Icons.close,
+                                                color: Colors.white),
+                                            label: const Text('Reject'),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.red,
+                                              foregroundColor: Colors.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
-                          trailing: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _getStatusColor(status),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              status.toUpperCase(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Request Details',
-                                    style:
-                                        Theme.of(context).textTheme.titleMedium,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text('Floor: ${event['floor']}'),
-                                  Text('Price: \$${event['price']}'),
-                                  Text(
-                                    'Requested: ${DateFormat('MMM dd, yyyy HH:mm').format(requestTime)}',
-                                  ),
-                                  Text('User ID: ${event['userId']}'),
-                                  const SizedBox(height: 16),
-                                  if (status == 'pending')
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        ElevatedButton.icon(
-                                          onPressed: () => _handleBookingAction(
-                                            context,
-                                            event['docId'],
-                                            event['roomId'],
-                                            'approved',
-                                          ),
-                                          icon: const Icon(Icons.check,
-                                              color: Colors.white),
-                                          label: const Text('Approve'),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.green,
-                                            foregroundColor: Colors.white,
-                                          ),
-                                        ),
-                                        ElevatedButton.icon(
-                                          onPressed: () => _handleBookingAction(
-                                            context,
-                                            event['docId'],
-                                            event['roomId'],
-                                            'rejected',
-                                          ),
-                                          icon: const Icon(Icons.close,
-                                              color: Colors.white),
-                                          label: const Text('Reject'),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.red,
-                                            foregroundColor: Colors.white,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
-                ),
-              ],
-            ),
+                  const SafeArea(
+                    child: Stack(
+                      children: [
+                        calendarBookingBlueContainer(),
+                      ],
+                    ),
+                  )
+                ],
+              ),
+      ),
     );
   }
 }

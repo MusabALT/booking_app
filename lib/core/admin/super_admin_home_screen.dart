@@ -1,6 +1,7 @@
 import 'package:booking_room/core/admin/add_new_room.dart';
 import 'package:booking_room/core/admin/admin_view_calender_screen.dart';
 import 'package:booking_room/core/admin/blue_for_admin.dart';
+import 'package:booking_room/core/admin/manage_room.dart';
 import 'package:booking_room/core/admin/request_screen.dart';
 import 'package:booking_room/core/helper/spacing.dart';
 import 'package:booking_room/core/widgets/app_text_button.dart';
@@ -65,9 +66,22 @@ class SuperHomeScreenAdmin extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const AddNewRoom()),
+                    MaterialPageRoute(builder: (context) => const AddNewRoom()),
+                  );
+                },
+              ),
+              verticalSpace(20),
+              AppTextButton(
+                buttonText: 'Manage Room',
+                textStyle: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ManageRoom()),
                   );
                 },
               )

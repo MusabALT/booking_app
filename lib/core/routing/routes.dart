@@ -7,4 +7,5 @@ class Routes {
   static const String homeScreen = '/homeScreen';
   static const String addNewRoom = '/addNewRoom';
   static const String superAdminHomeScreen = '/superAdminHomeScreen';
+  static const String manageRoom = '/manageRoom';
 }

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class UserBookingStatusScreen extends StatelessWidget {
   final String userId; // Pass the logged-in user's ID
 
-  UserBookingStatusScreen({required this.userId});
+  const UserBookingStatusScreen({super.key, required this.userId});
 
   @override
   Widget build(BuildContext context) {

@@ -54,7 +54,7 @@ class AppRouter {
         );
       case Routes.manageRoom:
         return MaterialPageRoute(
-          builder: (_) => ManageRoom(),
+          builder: (_) => const ManageRoom(),
         );
 
       default:

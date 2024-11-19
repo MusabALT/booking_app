@@ -19,7 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   late String email, password;
   final _formKey = GlobalKey<FormState>();
-  String _errorMessage = '';
+  final String _errorMessage = '';
 
   void _showErrorDialog(String message) {
     showDialog(

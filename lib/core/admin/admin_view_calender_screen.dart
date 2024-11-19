@@ -5,7 +5,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 
 class AdminCalendarScreen extends StatefulWidget {
-  const AdminCalendarScreen({Key? key}) : super(key: key);
+  const AdminCalendarScreen({super.key});
 
   @override
   State<AdminCalendarScreen> createState() => _AdminCalendarScreenState();

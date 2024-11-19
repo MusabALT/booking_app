@@ -68,7 +68,7 @@ class RoomListView extends StatelessWidget {
                           const Divider(),
                         ],
                       ))
-                  .toList(),
+                  ,
             ],
           ),
           actions: [
@@ -301,7 +301,7 @@ class RoomListView extends StatelessWidget {
                   trailing: IconButton(
                     icon: const Icon(Icons.add),
                     onPressed: () {
-                      final String uid = 'example-user-id';
+                      const String uid = 'example-user-id';
                       _requestBooking(context, room, uid);
                     },
                   ),

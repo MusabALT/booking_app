@@ -12,79 +12,130 @@ class SuperHomeScreenAdmin extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              children: [
+                const adminBookingBlueContainer(),
+                verticalSpace(20),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24.0),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[600],
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Welcome Admin!',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Manage your booking system efficiently',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // Grid of buttons
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 1,
+                  children: [
+                    _buildMenuButton(
+                      context,
+                      '📅',
+                      'View Calendar',
+                      const AdminCalendarScreen(),
+                    ),
+                    _buildMenuButton(
+                      context,
+                      '📋',
+                      'View Requests',
+                      const AdminBookingRequestsScreen(),
+                    ),
+                    _buildMenuButton(
+                      context,
+                      '➕',
+                      'Add Room',
+                      const AddNewRoom(),
+                    ),
+                    _buildMenuButton(
+                      context,
+                      '🔧',
+                      'Manage Room',
+                      ManageRoom(),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuButton(
+    BuildContext context,
+    String icon,
+    String title,
+    Widget destination,
+  ) {
+    return Material(
+      color: Colors.blue,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => destination),
+        ),
         child: Container(
-          width: double.infinity,
-          margin: const EdgeInsets.fromLTRB(20.0, 16.0, 20.0, 28.0),
+          padding: const EdgeInsets.all(16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const adminBookingBlueContainer(),
-              verticalSpace(20),
-              AppTextButton(
-                buttonText: 'View Calendar',
-                textStyle: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const AdminCalendarScreen()),
-                  );
-                },
+              Text(
+                icon,
+                style: const TextStyle(fontSize: 32),
               ),
-              verticalSpace(20),
-              AppTextButton(
-                buttonText: 'View Requests',
-                textStyle: const TextStyle(
+              const SizedBox(height: 8),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const AdminBookingRequestsScreen()),
-                  );
-                },
               ),
-              verticalSpace(20),
-              AppTextButton(
-                buttonText: 'Add Room',
-                textStyle: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const AddNewRoom()),
-                  );
-                },
-              ),
-              verticalSpace(20),
-              AppTextButton(
-                buttonText: 'Manage Room',
-                textStyle: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => ManageRoom()),
-                  );
-                },
-              )
             ],
           ),
         ),

@@ -68,7 +68,7 @@ class _AddNewRoomState extends State<AddNewRoom> {
             'F': double.tryParse(priceF) ?? 0.0,
           },
           'is_booked': false,
-          'capacity': 0,
+          'capacity': int.tryParse(capacity),
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -133,6 +133,7 @@ class _AddNewRoomState extends State<AddNewRoom> {
                   labelText: 'capacity',
                   icon: Icon(Icons.people),
                 ),
+                keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a capacity';
@@ -235,8 +236,7 @@ class _AddNewRoomState extends State<AddNewRoom> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) =>
-                            const AdminCalendarScreen()),
+                        builder: (context) => const AdminCalendarScreen()),
                   );
                 },
               )

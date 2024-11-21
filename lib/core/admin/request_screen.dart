@@ -1,3 +1,5 @@
+import 'package:booking_room/core/models/room.dart';
+import 'package:booking_room/core/payment/payment.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -144,11 +146,12 @@ class AdminBookingRequestsScreen extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
                                 ElevatedButton.icon(
-                                  onPressed: () => _handleBookingAction(
+                                  onPressed: () => _handleBookingRequest(
                                     context,
                                     doc.id,
                                     data['roomId'],
                                     'approved',
+                                    data['price'],
                                   ),
                                   icon: const Icon(Icons.check,
                                       color: Colors.white),
@@ -159,11 +162,12 @@ class AdminBookingRequestsScreen extends StatelessWidget {
                                   ),
                                 ),
                                 ElevatedButton.icon(
-                                  onPressed: () => _handleBookingAction(
+                                  onPressed: () => _handleBookingRequest(
                                     context,
                                     doc.id,
                                     data['roomId'],
                                     'rejected',
+                                    data['price'],
                                   ),
                                   icon: const Icon(Icons.close,
                                       color: Colors.white),
@@ -188,26 +192,118 @@ class AdminBookingRequestsScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _handleBookingAction(
+  Future<void> _handleBookingRequest(
     BuildContext context,
     String requestId,
     String roomId,
     String action,
+    double price,
   ) async {
     try {
-      // Start a batch write
+      if (action == 'approved') {
+        // Perform booking approval
+        await _performBookingAction(context, requestId, roomId, 'approved');
+
+        // If price is free (0), just show success message
+        if (price == 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Booking approved successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          // If there's a price, navigate to payment screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PaymentScreen(
+                requestId: requestId,
+                roomId: roomId,
+                price: price,
+              ),
+            ),
+          );
+        }
+      } else if (action == 'rejected') {
+        // Show rejection reason dialog
+        final rejectionReason = await showDialog<String>(
+          context: context,
+          builder: (BuildContext context) {
+            final reasonController = TextEditingController();
+            return AlertDialog(
+              title: const Text('Reject Booking'),
+              content: TextField(
+                controller: reasonController,
+                decoration: const InputDecoration(
+                  hintText: 'Enter reason for rejection',
+                ),
+                maxLines: 3,
+              ),
+              actions: [
+                TextButton(
+                  child: const Text('Cancel'),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                TextButton(
+                  child: const Text('Reject'),
+                  onPressed: () {
+                    Navigator.of(context).pop(reasonController.text.trim());
+                  },
+                ),
+              ],
+            );
+          },
+        );
+
+        // If no reason provided, cancel the rejection
+        if (rejectionReason == null || rejectionReason.isEmpty) {
+          return;
+        }
+
+        // Perform rejection
+        await _performBookingAction(
+            context, requestId, roomId, 'rejected', rejectionReason);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error processing booking: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _performBookingAction(
+      BuildContext context, String requestId, String roomId, String action,
+      [String? rejectionReason]) async {
+    try {
+      // Batch write for atomic operations
       final batch = FirebaseFirestore.instance.batch();
 
-      // Update the request status
+      // Prepare the update for the booking request
+      final requestUpdateData = {
+        'status': action,
+        if (rejectionReason != null) 'rejectionReason': rejectionReason,
+      };
+
+      // Reference to the request document
       final requestRef =
           FirebaseFirestore.instance.collection('roomRequests').doc(requestId);
-      batch.update(requestRef, {'status': action});
 
-      // Update room status based on action
+      // Reference to the room document
       final roomRef =
           FirebaseFirestore.instance.collection('rooms').doc(roomId);
+
+      // Update request status
+      batch.update(requestRef, requestUpdateData);
+
+      // Update room availability based on action
       batch.update(roomRef, {
         'is_booked': action == 'approved',
+        'booking_date':
+            action == 'approved' ? FieldValue.serverTimestamp() : null,
       });
 
       // Commit the batch
@@ -216,14 +312,12 @@ class AdminBookingRequestsScreen extends StatelessWidget {
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'Booking ${action == 'approved' ? 'approved' : 'rejected'} successfully',
-          ),
+          content: Text('Booking ${action.toLowerCase()} successfully'),
           backgroundColor: action == 'approved' ? Colors.green : Colors.red,
         ),
       );
     } catch (e) {
-      // Show error message
+      // Handle any errors during the process
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: $e'),

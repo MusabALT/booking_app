@@ -28,7 +28,7 @@ class AppImageAndText extends StatelessWidget {
         bottom: 30,
         left: 0,
         right: 0,
-        child: Text('Booking App\n Welcome!..',
+        child: Text('Your One-Stop \n Booking Solution!..',
             textAlign: TextAlign.center,
             style: TextStyles.font32BlueBold.copyWith(height: 1.4)),
       )

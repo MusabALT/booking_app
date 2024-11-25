@@ -94,7 +94,7 @@ class SuperHomeScreenAdmin extends StatelessWidget {
                     ),
                     _buildMenuButton(
                       context,
-                      '🔧',
+                      '💳',
                       'Manage Payment',
                       const AdminPaymentScreen(),
                     ),

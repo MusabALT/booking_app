@@ -108,7 +108,7 @@ class _AddNewRoomState extends State<AddNewRoom>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Room added successfully'),
-            backgroundColor: Colors.blue.shade400,
+            backgroundColor: Colors.green.shade400,
             behavior: SnackBarBehavior.floating,
           ),
         );

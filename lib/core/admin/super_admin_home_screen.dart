@@ -1,4 +1,5 @@
 import 'package:booking_room/core/admin/add_new_room.dart';
+import 'package:booking_room/core/admin/admin_payment_management_screen.dart';
 import 'package:booking_room/core/admin/admin_view_calender_screen.dart';
 import 'package:booking_room/core/admin/blue_for_admin.dart';
 import 'package:booking_room/core/admin/manage_room.dart';
@@ -90,6 +91,12 @@ class SuperHomeScreenAdmin extends StatelessWidget {
                       '🔧',
                       'Manage Room',
                       const ManageRoom(),
+                    ),
+                    _buildMenuButton(
+                      context,
+                      '🔧',
+                      'Manage Payment',
+                      const AdminPaymentScreen(),
                     ),
                   ],
                 ),

@@ -31,44 +31,42 @@ class RoomListView extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
-              ...['D', 'E', 'F']
-                  .map((category) => Column(
-                        children: [
-                          ListTile(
-                            title: Text('Category $category'),
-                            subtitle: Text(
-                                'Price: \$${room.prices[category]?.toStringAsFixed(2)}'),
-                            onTap: () {
-                              Navigator.of(context).pop(category);
-                            },
-                            trailing: IconButton(
-                              icon: const Icon(Icons.info_outline),
-                              onPressed: () {
-                                // Show category description in a temporary dialog
-                                showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return AlertDialog(
-                                      title: Text('Category $category Details'),
-                                      content: Text(
-                                          categoryDescriptions[category] ?? ''),
-                                      actions: [
-                                        TextButton(
-                                          child: const Text('Close'),
-                                          onPressed: () =>
-                                              Navigator.of(context).pop(),
-                                        ),
-                                      ],
-                                    );
-                                  },
+              ...['D', 'E', 'F'].map((category) => Column(
+                    children: [
+                      ListTile(
+                        title: Text('Category $category'),
+                        subtitle: Text(
+                            'Price: \$${room.prices[category]?.toStringAsFixed(2)}'),
+                        onTap: () {
+                          Navigator.of(context).pop(category);
+                        },
+                        trailing: IconButton(
+                          icon: const Icon(Icons.info_outline),
+                          onPressed: () {
+                            // Show category description in a temporary dialog
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: Text('Category $category Details'),
+                                  content: Text(
+                                      categoryDescriptions[category] ?? ''),
+                                  actions: [
+                                    TextButton(
+                                      child: const Text('Close'),
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(),
+                                    ),
+                                  ],
                                 );
                               },
-                            ),
-                          ),
-                          const Divider(),
-                        ],
-                      ))
-                  ,
+                            );
+                          },
+                        ),
+                      ),
+                      const Divider(),
+                    ],
+                  )),
             ],
           ),
           actions: [

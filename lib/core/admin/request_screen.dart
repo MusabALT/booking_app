@@ -1,9 +1,142 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class AdminBookingRequestsScreen extends StatelessWidget {
   const AdminBookingRequestsScreen({super.key});
+
+  Future<void> _sendNotification(
+    String userId,
+    String status,
+    String roomName,
+    DateTime bookingDate,
+    String timeSlot,
+  ) async {
+    try {
+      // Get the user's FCM token from Firestore
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
+      
+      final fcmToken = userDoc.data()?['fcmToken'];
+      
+      if (fcmToken == null) {
+        print('No FCM token found for user');
+        return;
+      }
+
+      // Format the notification message
+      final String formattedDate = DateFormat('MMM dd, yyyy').format(bookingDate);
+      final String title = 'Booking ${status.capitalize()}';
+      final String body = 'Your booking request for $roomName on $formattedDate at $timeSlot has been $status';
+
+      // Create the notification data
+      final notificationData = {
+        'to': fcmToken,
+        'notification': {
+          'title': title,
+          'body': body,
+        },
+        'data': {
+          'type': 'booking_update',
+          'status': status,
+          'roomName': roomName,
+          'bookingDate': formattedDate,
+          'timeSlot': timeSlot,
+        },
+      };
+
+      // Save notification to Firestore for in-app notifications
+      await FirebaseFirestore.instance.collection('notifications').add({
+        'userId': userId,
+        'title': title,
+        'body': body,
+        'status': status,
+        'roomName': roomName,
+        'bookingDate': bookingDate,
+        'timeSlot': timeSlot,
+        'createdAt': FieldValue.serverTimestamp(),
+        'read': false,
+      });
+
+      // Send FCM notification
+      await http.post(
+        Uri.parse('https://fcm.googleapis.com/fcm/send'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'key=YOUR_SERVER_KEY', // Replace with your FCM server key
+        },
+        body: json.encode(notificationData),
+      );
+    } catch (e) {
+      print('Error sending notification: $e');
+    }
+  }
+
+  Future<void> _handleBookingAction(
+    BuildContext context,
+    String requestId,
+    String roomId,
+    String action,
+  ) async {
+    try {
+      // Get the booking request data before updating
+      final requestDoc = await FirebaseFirestore.instance
+          .collection('roomRequests')
+          .doc(requestId)
+          .get();
+      
+      final requestData = requestDoc.data() as Map<String, dynamic>;
+
+      // Start a batch write
+      final batch = FirebaseFirestore.instance.batch();
+
+      // Update the request status
+      final requestRef =
+          FirebaseFirestore.instance.collection('roomRequests').doc(requestId);
+      batch.update(requestRef, {'status': action});
+
+      // Update room status based on action
+      final roomRef =
+          FirebaseFirestore.instance.collection('rooms').doc(roomId);
+      batch.update(roomRef, {
+        'is_booked': action == 'approved',
+      });
+
+      // Commit the batch
+      await batch.commit();
+
+      // Send notification to user
+      await _sendNotification(
+        requestData['userId'],
+        action,
+        requestData['roomName'],
+        (requestData['bookingDate'] as Timestamp).toDate(),
+        requestData['bookingTimeString'],
+      );
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Booking ${action == 'approved' ? 'approved' : 'rejected'} successfully',
+          ),
+          backgroundColor: action == 'approved' ? Colors.green : Colors.red,
+        ),
+      );
+    } catch (e) {
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -187,49 +320,11 @@ class AdminBookingRequestsScreen extends StatelessWidget {
       ),
     );
   }
+}
 
-  Future<void> _handleBookingAction(
-    BuildContext context,
-    String requestId,
-    String roomId,
-    String action,
-  ) async {
-    try {
-      // Start a batch write
-      final batch = FirebaseFirestore.instance.batch();
-
-      // Update the request status
-      final requestRef =
-          FirebaseFirestore.instance.collection('roomRequests').doc(requestId);
-      batch.update(requestRef, {'status': action});
-
-      // Update room status based on action
-      final roomRef =
-          FirebaseFirestore.instance.collection('rooms').doc(roomId);
-      batch.update(roomRef, {
-        'is_booked': action == 'approved',
-      });
-
-      // Commit the batch
-      await batch.commit();
-
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Booking ${action == 'approved' ? 'approved' : 'rejected'} successfully',
-          ),
-          backgroundColor: action == 'approved' ? Colors.green : Colors.red,
-        ),
-      );
-    } catch (e) {
-      // Show error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+// Extension to capitalize first letter of string
+extension StringExtension on String {
+  String capitalize() {
+    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

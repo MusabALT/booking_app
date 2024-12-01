@@ -17,6 +17,12 @@ class _ManageRoomState extends State<ManageRoom> {
   bool isLoading = true;
   final ImagePicker _picker = ImagePicker();
 
+  // Color palette
+  final Color primaryColor = const Color(0xFF3B5998); // Deep blue
+  final Color accentColor = const Color(0xFF8C9EFF); // Soft blue
+  final Color backgroundColor = const Color(0xFFF5F5F5); // Light gray
+  final Color cardColor = Colors.white;
+
   @override
   void initState() {
     super.initState();
@@ -292,13 +298,21 @@ class _ManageRoomState extends State<ManageRoom> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Manage Rooms'),
-        backgroundColor: Colors.blue,
+        title: Text(
+          'Manage Rooms',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: primaryColor,
+        elevation: 0,
         actions: [
           if (rooms.isNotEmpty)
             IconButton(
-              icon: const Icon(Icons.delete_forever),
+              icon: Icon(Icons.delete_forever, color: Colors.white),
               onPressed: () async {
                 final confirmed = await _showDeleteAllConfirmation();
                 if (confirmed == true) {
@@ -310,81 +324,166 @@ class _ManageRoomState extends State<ManageRoom> {
         ],
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: CircularProgressIndicator(
+                color: primaryColor,
+              ),
+            )
           : RefreshIndicator(
               onRefresh: fetchRooms,
+              color: primaryColor,
               child: rooms.isEmpty
-                  ? const Center(child: Text('No rooms available'))
+                  ? Center(
+                      child: Text(
+                        'No rooms available',
+                        style: TextStyle(
+                          color: primaryColor,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    )
                   : ListView.builder(
                       itemCount: rooms.length,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                       itemBuilder: (context, index) {
                         final room = rooms[index];
-                        return Card(
+                        return Container(
                           margin: const EdgeInsets.symmetric(
                             horizontal: 16.0,
                             vertical: 8.0,
                           ),
-                          child: Column(
-                            children: [
-                              if (room.imagePath.isNotEmpty)
-                                Image.network(
-                                  room.imagePath,
-                                  height: 200,
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const Icon(Icons.error),
-                                ),
-                              ListTile(
-                                title: Text(room.name),
-                                subtitle: Text(
-                                    'Floor: ${room.floor}\nCapacity: ${room.capacity}\nPrice (D): ${room.prices['D']}\nPrice (E): ${room.prices['E']}\nPrice (F): ${room.prices['F']}'),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit),
-                                      onPressed: () => _editRoom(room),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.delete),
-                                      onPressed: () async {
-                                        final confirm = await showDialog(
-                                          context: context,
-                                          builder: (BuildContext context) {
-                                            return AlertDialog(
-                                              title:
-                                                  const Text('Confirm Delete'),
-                                              content: const Text(
-                                                  'Are you sure you want to delete this room?'),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(
-                                                          context, false),
-                                                  child: const Text('Cancel'),
-                                                ),
-                                                TextButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(
-                                                          context, true),
-                                                  child: const Text('Delete'),
-                                                ),
-                                              ],
-                                            );
-                                          },
-                                        );
-
-                                        if (confirm == true) {
-                                          await deleteRoom(
-                                              room.id, room.imagePath);
-                                        }
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
+                          decoration: BoxDecoration(
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 10,
+                                offset: Offset(0, 5),
+                              )
                             ],
+                          ),
+                          child: Card(
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            color: cardColor,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (room.imagePath.isNotEmpty)
+                                  ClipRRect(
+                                    borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(15),
+                                    ),
+                                    child: Image.network(
+                                      room.imagePath,
+                                      height: 200,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              Container(
+                                        height: 200,
+                                        color: backgroundColor,
+                                        child: Icon(
+                                          Icons.error,
+                                          color: primaryColor,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        room.name,
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: primaryColor,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Floor: ${room.floor} | Capacity: ${room.capacity}',
+                                        style: TextStyle(
+                                          color: Colors.grey[700],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Prices: D: ${room.prices['D']} | E: ${room.prices['E']} | F: ${room.prices['F']}',
+                                        style: TextStyle(
+                                          color: accentColor,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16.0,
+                                    vertical: 8.0,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.edit,
+                                          color: primaryColor,
+                                        ),
+                                        onPressed: () => _editRoom(room),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.delete,
+                                          color: Colors.red,
+                                        ),
+                                        onPressed: () async {
+                                          final confirm = await showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return AlertDialog(
+                                                title: const Text(
+                                                    'Confirm Delete'),
+                                                content: const Text(
+                                                    'Are you sure you want to delete this room?'),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.pop(
+                                                            context, false),
+                                                    child: const Text('Cancel'),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.pop(
+                                                            context, true),
+                                                    child: const Text('Delete'),
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          );
+
+                                          if (confirm == true) {
+                                            await deleteRoom(
+                                                room.id, room.imagePath);
+                                          }
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         );
                       },

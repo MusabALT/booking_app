@@ -300,7 +300,7 @@ class _ManageRoomState extends State<ManageRoom> {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Manage Rooms',
           style: TextStyle(
             color: Colors.white,
@@ -312,7 +312,7 @@ class _ManageRoomState extends State<ManageRoom> {
         actions: [
           if (rooms.isNotEmpty)
             IconButton(
-              icon: Icon(Icons.delete_forever, color: Colors.white),
+              icon: const Icon(Icons.delete_forever, color: Colors.white),
               onPressed: () async {
                 final confirmed = await _showDeleteAllConfirmation();
                 if (confirmed == true) {
@@ -353,7 +353,7 @@ class _ManageRoomState extends State<ManageRoom> {
                             horizontal: 16.0,
                             vertical: 8.0,
                           ),
-                          decoration: BoxDecoration(
+                          decoration: const  BoxDecoration(
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black12,
@@ -442,7 +442,7 @@ class _ManageRoomState extends State<ManageRoom> {
                                       ),
                                       const SizedBox(width: 8),
                                       IconButton(
-                                        icon: Icon(
+                                        icon:const Icon(
                                           Icons.delete,
                                           color: Colors.red,
                                         ),

@@ -184,36 +184,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       ),
                     ],
                     const SizedBox(height: 20),
-                    /*ElevatedButton(
-                      onPressed: () async {
-                        if (!_formKey.currentState!.validate()) {
-                          return;
-                        }
-                        try {
-                          local_model.User? newUser =
-                              (await _authController.register(
-                                  email, password, name, phoneNumber, address));
-                          if (newUser != null) {
-                            Navigator.pushReplacementNamed(
-                                context, '/customer_home');
-                          } else {
-                            _showErrorDialog(
-                                'Registration failed. Please try again.');
-                          }
-                        } catch (error) {
-                          _showErrorDialog(
-                              'An error occurred: ${error.toString()}');
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 14, 24, 111),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 40, vertical: 10),
-                        textStyle: const TextStyle(fontSize: 18),
-                      ),
-                      child: Text('Create Account',
-                          style: TextStyles.font13BlueSemiBold),
-                    ),*/
                     AppTextButton(
                       buttonText: 'Create an Account',
                       textStyle: TextStyles.font16WhiteSemiBold,

@@ -1,3 +1,5 @@
+import 'package:booking_room/core/admin/admin_contact_screen.dart';
+import 'package:booking_room/core/admin/admin_payment_management_screen.dart';
 import 'package:booking_room/core/admin/admin_view_calender_screen.dart';
 import 'package:booking_room/core/admin/blue_for_admin.dart';
 import 'package:booking_room/core/admin/request_screen.dart';
@@ -76,6 +78,18 @@ class HomeScreenAdmin extends StatelessWidget {
                       '📋',
                       'View Requests',
                       const AdminBookingRequestsScreen(),
+                    ),
+                    _buildMenuButton(
+                      context,
+                      '💳',
+                      'Manage Payment',
+                      const AdminPaymentScreen(),
+                    ),
+                    _buildMenuButton(
+                      context,
+                      '💬',
+                      'Messages',
+                      const AdminMessagesScreen(),
                     ),
                   ],
                 ),

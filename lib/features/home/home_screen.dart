@@ -1,4 +1,5 @@
 import 'package:booking_room/core/payment/show_payment_screen.dart';
+import 'package:booking_room/features/home/contact_screen.dart';
 import 'package:booking_room/features/home/widgets/home_top_bar.dart';
 import 'package:booking_room/features/home/widgets/room_list_view.dart';
 import 'package:flutter/material.dart';
@@ -185,6 +186,82 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ),
                                 label: const Text(
                                   'View Approved Bookings',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  foregroundColor: Colors.white,
+                                  shadowColor: Colors.transparent,
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 16.0),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // New Button navigating to UserContactScreen
+                    ScaleTransition(
+                      scale: CurvedAnimation(
+                        parent: _slideController,
+                        curve:
+                            const Interval(0.6, 1.0, curve: Curves.elasticOut),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Hero(
+                          tag: 'user_contact_button',
+                          child: Material(
+                            color: Colors.transparent,
+                            child: Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.green.shade400,
+                                    Colors.green.shade600,
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(15),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.green.shade200,
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    PageRouteBuilder(
+                                      pageBuilder: (context, animation,
+                                          secondaryAnimation) {
+                                        return FadeTransition(
+                                          opacity: animation,
+                                          child: const UserContactScreen(),
+                                        );
+                                      },
+                                      transitionDuration:
+                                          const Duration(milliseconds: 500),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(
+                                  Icons.contact_page,
+                                  size: 24,
+                                ),
+                                label: const Text(
+                                  'Go to User Contact',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,

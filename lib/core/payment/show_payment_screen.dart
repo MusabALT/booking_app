@@ -1,5 +1,6 @@
 import 'package:booking_room/core/payment/payment.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class ShowPaymentScreen extends StatelessWidget {
@@ -11,8 +12,20 @@ class ShowPaymentScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const String currentUserId =
-        "example-user-id"; // Replace with actual user ID retrieval
+    // Fetch the current user's ID
+    final String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
+    // If the user is not authenticated, show a message
+    if (currentUserId == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Your Bookings'),
+        ),
+        body: const Center(
+          child: Text('Please log in to view your bookings.'),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -23,8 +36,10 @@ class ShowPaymentScreen extends StatelessWidget {
         child: StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
               .collection('roomRequests')
-              .where('userId', isEqualTo: currentUserId)
-              .where('status', isEqualTo: 'approved')
+              .where('userId',
+                  isEqualTo: currentUserId) // Use the authenticated user's ID
+              .where('status',
+                  isEqualTo: 'approved') // Filter by approved bookings
               .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -39,7 +54,7 @@ class ShowPaymentScreen extends StatelessWidget {
 
             if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
               return const Center(
-                child: Text('No approved bookings found'),
+                child: Text('No approved bookings found.'),
               );
             }
 
@@ -102,8 +117,7 @@ class ShowPaymentScreen extends StatelessWidget {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => PaymentScreen(
-                                    requestId:
-                                        requestId, 
+                                    requestId: requestId,
                                     roomId: roomId,
                                     price: price,
                                     roomName: roomName,

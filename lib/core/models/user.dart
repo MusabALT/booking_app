@@ -7,6 +7,7 @@ class User {
   final String role;
   final String phoneNumber;
   final String address;
+  final String? fcmToken;
 
   User({
     required this.uid,
@@ -15,6 +16,7 @@ class User {
     required this.role,
     required this.phoneNumber,
     required this.address,
+    this.fcmToken
   });
 
   Map<String, dynamic> toMap() {
@@ -25,6 +27,7 @@ class User {
       'role': role,
       'phoneNumber': phoneNumber,
       'address': address,
+      'fcmToken': fcmToken,
     };
   }
 
@@ -36,6 +39,7 @@ class User {
       role: map['role'] as String,
       phoneNumber: map['phoneNumber'] as String,
       address: map['address'] as String,
+      fcmToken: map['fcmToken'] as String?,
     );
   }
 }

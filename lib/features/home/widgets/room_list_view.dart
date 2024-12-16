@@ -1,5 +1,6 @@
 import 'package:booking_room/core/models/room.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -82,7 +83,16 @@ class RoomListView extends StatelessWidget {
     return selectedCategory;
   }
 
-  void _requestBooking(BuildContext context, Room room, String userId) async {
+  void _requestBooking(BuildContext context, Room room) async {
+    final String? userId = FirebaseAuth.instance.currentUser?.uid;
+
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please log in to request a booking')),
+      );
+      return;
+    }
+
     // First, let the user select a category
     final selectedCategory = await _selectCategory(context, room);
 
@@ -282,7 +292,7 @@ class RoomListView extends StatelessWidget {
               return Card(
                 margin: const EdgeInsets.all(10.0),
                 child: ListTile(
-                  leading: room.imagePath != null
+                  leading: room.imagePath.isNotEmpty
                       ? Image.network(
                           room.imagePath,
                           width: 50,
@@ -299,8 +309,7 @@ class RoomListView extends StatelessWidget {
                   trailing: IconButton(
                     icon: const Icon(Icons.add),
                     onPressed: () {
-                      const String uid = 'example-user-id';
-                      _requestBooking(context, room, uid);
+                      _requestBooking(context, room);
                     },
                   ),
                 ),

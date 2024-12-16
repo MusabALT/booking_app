@@ -12,26 +12,30 @@ class AdminBookingRequestsScreen extends StatelessWidget {
     String status,
     String roomName,
     DateTime bookingDate,
-    String timeSlot,
-  ) async {
+    String timeSlot, {
+    String reason = '',
+  }) async {
     try {
       // Get the user's FCM token from Firestore
       final userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(userId)
           .get();
-      
+
       final fcmToken = userDoc.data()?['fcmToken'];
-      
+
       if (fcmToken == null) {
-        print('No FCM token found for user');
+        print('No FCM token found for user $userId');
         return;
       }
 
       // Format the notification message
-      final String formattedDate = DateFormat('MMM dd, yyyy').format(bookingDate);
+      final String formattedDate =
+          DateFormat('MMM dd, yyyy').format(bookingDate);
       final String title = 'Booking ${status.capitalize()}';
-      final String body = 'Your booking request for $roomName on $formattedDate at $timeSlot has been $status';
+      final String body = status == 'rejected'
+          ? 'Your booking request for $roomName on $formattedDate at $timeSlot has been $status. Reason: $reason'
+          : 'Your booking request for $roomName on $formattedDate at $timeSlot has been $status';
 
       // Create the notification data
       final notificationData = {
@@ -63,14 +67,20 @@ class AdminBookingRequestsScreen extends StatelessWidget {
       });
 
       // Send FCM notification
-      await http.post(
+      var response = await http.post(
         Uri.parse('https://fcm.googleapis.com/fcm/send'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'key=YOUR_SERVER_KEY', // Replace with your FCM server key
+          'Authorization':
+              'key=YOUR_SERVER_KEY', // Replace with your server key
         },
         body: json.encode(notificationData),
       );
+
+      if (response.statusCode != 200) {
+        print(
+            'Failed to send FCM notification, status code: ${response.statusCode}');
+      }
     } catch (e) {
       print('Error sending notification: $e');
     }
@@ -82,26 +92,97 @@ class AdminBookingRequestsScreen extends StatelessWidget {
     String roomId,
     String action,
   ) async {
+    if (action == 'rejected') {
+      final TextEditingController _reasonController = TextEditingController();
+      return showDialog<void>(
+        context: context,
+        barrierDismissible: false, // User must tap button to close the dialog
+        builder: (BuildContext dialogContext) {
+          return AlertDialog(
+            title: const Text('Reject Booking'),
+            content: TextField(
+              controller: _reasonController,
+              decoration:
+                  const InputDecoration(hintText: "Enter reason for rejection"),
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Cancel'),
+                onPressed: () {
+                  Navigator.of(dialogContext).pop(); // Close the dialog
+                },
+              ),
+              TextButton(
+                child: const Text('Submit'),
+                onPressed: () {
+                  if (_reasonController.text.isNotEmpty) {
+                    Navigator.of(dialogContext).pop();
+                    _processBookingAction(context, requestId, roomId, action,
+                        _reasonController.text);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please provide a reason for rejection.'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      // If the action is not rejection, process normally
+      _processBookingAction(context, requestId, roomId, action, '');
+    }
+  }
+
+  Future<void> _processBookingAction(
+    BuildContext context,
+    String requestId,
+    String roomId,
+    String action,
+    String reason,
+  ) async {
     try {
       // Get the booking request data before updating
       final requestDoc = await FirebaseFirestore.instance
           .collection('roomRequests')
           .doc(requestId)
           .get();
-      
+
       final requestData = requestDoc.data() as Map<String, dynamic>;
+
+      // Check if the room exists before proceeding
+      final roomRef =
+          FirebaseFirestore.instance.collection('rooms').doc(roomId);
+      final roomDoc = await roomRef.get();
+
+      if (!roomDoc.exists) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Room does not exist.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
 
       // Start a batch write
       final batch = FirebaseFirestore.instance.batch();
 
-      // Update the request status
+      // Update the request status and add the rejection reason if any
       final requestRef =
           FirebaseFirestore.instance.collection('roomRequests').doc(requestId);
-      batch.update(requestRef, {'status': action});
+      final updateData = {'status': action};
+      if (action == 'rejected' && reason.isNotEmpty) {
+        updateData['rejectionReason'] = reason;
+      }
+      batch.update(requestRef, updateData);
 
       // Update room status based on action
-      final roomRef =
-          FirebaseFirestore.instance.collection('rooms').doc(roomId);
       batch.update(roomRef, {
         'is_booked': action == 'approved',
       });
@@ -116,14 +197,14 @@ class AdminBookingRequestsScreen extends StatelessWidget {
         requestData['roomName'],
         (requestData['bookingDate'] as Timestamp).toDate(),
         requestData['bookingTimeString'],
+        reason: reason,
       );
 
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Booking ${action == 'approved' ? 'approved' : 'rejected'} successfully',
-          ),
+              'Booking ${action == 'approved' ? 'approved' : 'rejected'} successfully'),
           backgroundColor: action == 'approved' ? Colors.green : Colors.red,
         ),
       );
@@ -322,9 +403,8 @@ class AdminBookingRequestsScreen extends StatelessWidget {
   }
 }
 
-// Extension to capitalize first letter of string
 extension StringExtension on String {
   String capitalize() {
     return "${this[0].toUpperCase()}${substring(1)}";
-  } 
+  }
 }

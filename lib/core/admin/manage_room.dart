@@ -17,10 +17,9 @@ class _ManageRoomState extends State<ManageRoom> {
   bool isLoading = true;
   final ImagePicker _picker = ImagePicker();
 
-  // Color palette
-  final Color primaryColor = const Color(0xFF3B5998); // Deep blue
-  final Color accentColor = const Color(0xFF8C9EFF); // Soft blue
-  final Color backgroundColor = const Color(0xFFF5F5F5); // Light gray
+  final Color primaryColor = const Color(0xFF3B5998); 
+  final Color accentColor = const Color(0xFF8C9EFF); 
+  final Color backgroundColor = const Color(0xFFF5F5F5); 
   final Color cardColor = Colors.white;
 
   @override

@@ -5,7 +5,7 @@ class Room {
   final String name;
   final String imagePath;
   final int floor;
-  final Map<String, double> prices; // Changed to map of category prices
+  final Map<String, double> prices; 
   final bool isBooked;
   final DateTime? bookingDate;
   final String? bookingTime;

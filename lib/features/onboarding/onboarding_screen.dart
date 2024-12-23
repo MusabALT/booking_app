@@ -47,7 +47,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       curve: Curves.elasticOut,
     ));
 
-    // Content animations
     _contentAnimationController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
@@ -77,7 +76,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       curve: const Interval(0.6, 1.0, curve: Curves.easeOutBack),
     ));
 
-    // Start animations sequentially
+
     _logoAnimationController.forward().then((_) {
       _contentAnimationController.forward();
     });
@@ -115,7 +114,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               ),
               child: Column(
                 children: [
-                  // Animated Logo
+
                   ScaleTransition(
                     scale: _logoScaleAnimation,
                     child: RotationTransition(
@@ -126,7 +125,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
                   SizedBox(height: 40.h),
 
-                  // Animated Content
                   SlideTransition(
                     position: _slideAnimation,
                     child: FadeTransition(
@@ -135,7 +133,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     ),
                   ),
 
-                  // Animated Text and Button
+              
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 30.w),
                     child: FadeTransition(

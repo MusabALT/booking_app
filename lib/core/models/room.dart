@@ -23,11 +23,10 @@ class Room {
     required this.capacity, required double price,
   });
 
-  // Factory method to create a Room object from Firestore data
   factory Room.fromDocument(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
 
-    // Convert price data to Map<String, double>
+  
     Map<String, double> prices = {
       'D': double.tryParse(data['prices']['D'].toString()) ?? 0.0,
       'E': double.tryParse(data['prices']['E'].toString()) ?? 0.0,
@@ -49,7 +48,7 @@ class Room {
     );
   }
 
-  // Method to convert a Room object to a Map for Firestore
+  
   Map<String, dynamic> toMap() {
     return {
       'name': name,

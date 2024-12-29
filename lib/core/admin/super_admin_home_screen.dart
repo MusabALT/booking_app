@@ -60,7 +60,6 @@ class SuperHomeScreenAdmin extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-                // Grid of buttons
                 GridView.count(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),

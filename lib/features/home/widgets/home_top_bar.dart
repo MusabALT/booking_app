@@ -1,5 +1,6 @@
 import 'package:booking_room/core/theming/colors.dart';
 import 'package:booking_room/core/theming/styles.dart';
+import 'package:booking_room/features/request_status.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -24,9 +25,19 @@ class HomeTopBar extends StatelessWidget {
           ],
         ),
         const Spacer(),
-        CircleAvatar(
-          backgroundColor: ColorsManager.moreLighterGray,
-          child: SvgPicture.asset('assets/svgs/notification.svg'),
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const RequestStatusScreen(),
+              ),
+            );
+          },
+          child: CircleAvatar(
+            backgroundColor: ColorsManager.moreLighterGray,
+            child: SvgPicture.asset('assets/svgs/notification.svg'),
+          ),
         )
       ],
     );

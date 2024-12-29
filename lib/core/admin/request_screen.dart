@@ -162,7 +162,7 @@ class AdminBookingRequestsScreen extends StatelessWidget {
 
       if (!roomDoc.exists) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Room does not exist.'),
             backgroundColor: Colors.red,
           ),
@@ -170,10 +170,7 @@ class AdminBookingRequestsScreen extends StatelessWidget {
         return;
       }
 
-      // Start a batch write
       final batch = FirebaseFirestore.instance.batch();
-
-      // Update the request status and add the rejection reason if any
       final requestRef =
           FirebaseFirestore.instance.collection('roomRequests').doc(requestId);
       final updateData = {'status': action};
@@ -181,16 +178,12 @@ class AdminBookingRequestsScreen extends StatelessWidget {
         updateData['rejectionReason'] = reason;
       }
       batch.update(requestRef, updateData);
-
-      // Update room status based on action
       batch.update(roomRef, {
         'is_booked': action == 'approved',
       });
 
-      // Commit the batch
       await batch.commit();
 
-      // Send notification to user
       await _sendNotification(
         requestData['userId'],
         action,
@@ -200,7 +193,6 @@ class AdminBookingRequestsScreen extends StatelessWidget {
         reason: reason,
       );
 
-      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -209,7 +201,6 @@ class AdminBookingRequestsScreen extends StatelessWidget {
         ),
       );
     } catch (e) {
-      // Show error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: $e'),
@@ -227,7 +218,6 @@ class AdminBookingRequestsScreen extends StatelessWidget {
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
-              // Add filter logic here
             },
             itemBuilder: (BuildContext context) => [
               const PopupMenuItem(
@@ -351,7 +341,6 @@ class AdminBookingRequestsScreen extends StatelessWidget {
                           Text(
                             'Requested: ${DateFormat('MMM dd, yyyy HH:mm').format(requestTime)}',
                           ),
-                          Text('User ID: ${data['userId']}'),
                           const SizedBox(height: 16),
                           if (status == 'pending')
                             Row(

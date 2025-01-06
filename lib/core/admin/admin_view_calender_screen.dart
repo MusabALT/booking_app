@@ -1,4 +1,3 @@
-import 'package:booking_room/core/admin/blue_calendar.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -45,6 +44,16 @@ class _AdminCalendarScreenState extends State<AdminCalendarScreen> {
           final bookingDate = (data['bookingDate'] as Timestamp).toDate();
           final requestTime = (data['requestTime'] as Timestamp).toDate();
           final status = data['status'] as String;
+          final userId = data['userId'] ?? '';
+
+          // Fetch user details based on the User class
+          final userDoc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(userId)
+              .get();
+          final userData = userDoc.data();
+          final userName = userData?['name'] ?? 'Unknown User';
+          final userPhoneNumber = userData?['phoneNumber'] ?? 'N/A';
 
           final event = {
             'roomName': data['roomName'] ?? 'Unknown Room',
@@ -52,7 +61,8 @@ class _AdminCalendarScreenState extends State<AdminCalendarScreen> {
             'bookingTimeString': data['bookingTimeString'] ?? '',
             'floor': data['floor'] ?? '',
             'price': data['price'] ?? '',
-            'userId': data['userId'] ?? '',
+            'userName': userName,
+            'userPhoneNumber': userPhoneNumber,
             'requestTime': requestTime,
             'roomId': data['roomId'] ?? '',
             'docId': doc.id,
@@ -316,7 +326,8 @@ class _AdminCalendarScreenState extends State<AdminCalendarScreen> {
                                     Text(
                                       'Requested: ${DateFormat('MMM dd, yyyy HH:mm').format(requestTime)}',
                                     ),
-                                    Text('User ID: ${event['userId']}'),
+                                    Text('User Name: ${event['userName']}'),
+                                    Text('Phone: ${event['userPhoneNumber']}'),
                                     const SizedBox(height: 16),
                                     if (status == 'pending')
                                       Row(
@@ -366,13 +377,6 @@ class _AdminCalendarScreenState extends State<AdminCalendarScreen> {
                       },
                     ),
                   ),
-                  const SafeArea(
-                    child: Stack(
-                      children: [
-                        calendarBookingBlueContainer(),
-                      ],
-                    ),
-                  )
                 ],
               ),
       ),

@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 class BookingStatusScreen extends StatelessWidget {
   final String userId; // This is obtained from the user's login session
 
-  const BookingStatusScreen({Key? key, required this.userId}) : super(key: key);
+  const BookingStatusScreen({super.key, required this.userId});
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +99,7 @@ class BookingStatusScreen extends StatelessWidget {
     return Chip(
       label: Text(
         status.toUpperCase(),
-        style: TextStyle(color: Colors.white),
+        style: const TextStyle(color: Colors.white),
       ),
       backgroundColor: color,
     );

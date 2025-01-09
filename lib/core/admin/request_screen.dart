@@ -93,7 +93,7 @@ class AdminBookingRequestsScreen extends StatelessWidget {
     String action,
   ) async {
     if (action == 'rejected') {
-      final TextEditingController _reasonController = TextEditingController();
+      final TextEditingController reasonController = TextEditingController();
       return showDialog<void>(
         context: context,
         barrierDismissible: false, // User must tap button to close the dialog
@@ -101,7 +101,7 @@ class AdminBookingRequestsScreen extends StatelessWidget {
           return AlertDialog(
             title: const Text('Reject Booking'),
             content: TextField(
-              controller: _reasonController,
+              controller: reasonController,
               decoration:
                   const InputDecoration(hintText: "Enter reason for rejection"),
             ),
@@ -115,10 +115,10 @@ class AdminBookingRequestsScreen extends StatelessWidget {
               TextButton(
                 child: const Text('Submit'),
                 onPressed: () {
-                  if (_reasonController.text.isNotEmpty) {
+                  if (reasonController.text.isNotEmpty) {
                     Navigator.of(dialogContext).pop();
                     _processBookingAction(context, requestId, roomId, action,
-                        _reasonController.text);
+                        reasonController.text);
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -134,7 +134,6 @@ class AdminBookingRequestsScreen extends StatelessWidget {
         },
       );
     } else {
-      // If the action is not rejection, process normally
       _processBookingAction(context, requestId, roomId, action, '');
     }
   }
@@ -147,7 +146,6 @@ class AdminBookingRequestsScreen extends StatelessWidget {
     String reason,
   ) async {
     try {
-      // Get the booking request data before updating
       final requestDoc = await FirebaseFirestore.instance
           .collection('roomRequests')
           .doc(requestId)
@@ -155,7 +153,6 @@ class AdminBookingRequestsScreen extends StatelessWidget {
 
       final requestData = requestDoc.data() as Map<String, dynamic>;
 
-      // Check if the room exists before proceeding
       final roomRef =
           FirebaseFirestore.instance.collection('rooms').doc(roomId);
       final roomDoc = await roomRef.get();

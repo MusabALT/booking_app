@@ -46,7 +46,7 @@ class _AdminCalendarScreenState extends State<AdminCalendarScreen> {
           final status = data['status'] as String;
           final userId = data['userId'] ?? '';
 
-          // Fetch user details based on the User class
+
           final userDoc = await FirebaseFirestore.instance
               .collection('users')
               .doc(userId)

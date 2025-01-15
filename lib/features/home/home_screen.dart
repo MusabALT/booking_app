@@ -98,13 +98,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Top Bar with scale animation
                     ScaleTransition(
                       scale: _scaleAnimation,
                       child: const HomeTopBar(),
                     ),
 
-                    // Blue Container with slide animation
                     SlideTransition(
                       position: Tween<Offset>(
                         begin: const Offset(-1.0, 0.0),
@@ -117,7 +115,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       child: const BookingBlueContainer(),
                     ),
 
-                    // Room List with staggered animation
                     Expanded(
                       child: SlideTransition(
                         position: Tween<Offset>(
@@ -132,7 +129,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       ),
                     ),
 
-                    // Payment Button with bounce animation
                     ScaleTransition(
                       scale: CurvedAnimation(
                         parent: _slideController,
@@ -208,7 +204,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       ),
                     ),
 
-                    // New Button navigating to UserContactScreen
                     ScaleTransition(
                       scale: CurvedAnimation(
                         parent: _slideController,

@@ -12,10 +12,8 @@ class ShowPaymentScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Fetch the current user's ID
     final String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
 
-    // If the user is not authenticated, show a message
     if (currentUserId == null) {
       return Scaffold(
         appBar: AppBar(

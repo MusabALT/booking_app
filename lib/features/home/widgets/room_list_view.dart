@@ -103,14 +103,11 @@ class RoomListView extends StatelessWidget {
       return;
     }
 
-    // Get the price for the selected category
     final selectedPrice = room.prices[selectedCategory] ?? 0.0;
 
-    // Get current date as initial date
     DateTime currentDate = DateTime.now();
     TimeOfDay currentTime = TimeOfDay.now();
 
-    // Show date picker
     final DateTime? selectedDate = await showDatePicker(
       context: context,
       initialDate: currentDate,
@@ -130,7 +127,6 @@ class RoomListView extends StatelessWidget {
 
     if (selectedDate == null) return;
 
-    // Show time picker
     final TimeOfDay? selectedTime = await showTimePicker(
       context: context,
       initialTime: currentTime,
@@ -148,7 +144,6 @@ class RoomListView extends StatelessWidget {
 
     if (selectedTime == null) return;
 
-    // Combine date and time into a single DateTime object
     final DateTime bookingDateTime = DateTime(
       selectedDate.year,
       selectedDate.month,
@@ -157,7 +152,6 @@ class RoomListView extends StatelessWidget {
       selectedTime.minute,
     );
 
-    // Check if selected time is not in the past
     if (bookingDateTime.isBefore(DateTime.now())) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Cannot book a time in the past')),
@@ -184,7 +178,6 @@ class RoomListView extends StatelessWidget {
       return;
     }
 
-    // Create booking request with selected category and price
     final bookingRequest = {
       'roomId': room.id,
       'userId': userId,
@@ -199,7 +192,6 @@ class RoomListView extends StatelessWidget {
       'floor': room.floor,
     };
 
-    // Show confirmation dialog with selected category
     bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {

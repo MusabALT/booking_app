@@ -9,11 +9,10 @@ class SignUpButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-          horizontal: 20.0), // Added padding for centering
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: SizedBox(
-        width: double.infinity, // Full width
-        height: 52, // Height of the button
+        width: double.infinity,
+        height: 52,
         child: TextButton(
           onPressed: () {
             context.pushNamed(Routes.registrationScreen);
@@ -22,7 +21,7 @@ class SignUpButton extends StatelessWidget {
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             shape: WidgetStateProperty.all(
               RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16), // Rounded corners
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
           ),

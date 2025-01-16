@@ -55,7 +55,6 @@ class RoomBookingScreen extends StatelessWidget {
   }
 
   void _requestBooking(BuildContext context, Room room) {
-    // Display a confirmation dialog
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -72,7 +71,6 @@ class RoomBookingScreen extends StatelessWidget {
             ),
             TextButton(
               onPressed: () async {
-                // Save the booking request in Firestore
                 await FirebaseFirestore.instance
                     .collection('rooms')
                     .doc(room.id)
@@ -83,7 +81,6 @@ class RoomBookingScreen extends StatelessWidget {
 
                 Navigator.of(context).pop();
 
-                // Notify the user of a successful request
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Booking request sent')),
                 );

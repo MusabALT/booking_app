@@ -13,13 +13,13 @@ class BookingLogoAndName extends StatelessWidget {
       children: [
         SvgPicture.asset(
           'assets/svgs/logo.svg',
-          height: 24.0, // Adjust the height to make the SVG smaller
-          width: 24.0, // Adjust the width to match the height
+          height: 24.0, 
+          width: 24.0, 
           color: Colors.blue,
         ),
         SizedBox(width: 10.w),
         Text(
-          'SpaceBook',
+          'SpaceBooking',
           style: TextStyles.font24BlackBold,
         ),
       ],

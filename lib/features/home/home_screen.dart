@@ -23,7 +23,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
 
-    // Initialize fade animation
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
@@ -37,7 +36,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       curve: Curves.easeIn,
     ));
 
-    // Initialize slide animation
     _slideController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
@@ -59,7 +57,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       curve: Curves.easeOutBack,
     ));
 
-    // Start animations
     _fadeController.forward();
     _slideController.forward();
   }

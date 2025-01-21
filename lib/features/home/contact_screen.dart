@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class UserContactScreen extends StatefulWidget {
   const UserContactScreen({super.key});
@@ -13,10 +16,43 @@ class _UserContactScreenState extends State<UserContactScreen> {
   final TextEditingController _messageController = TextEditingController();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
+  File? _selectedImage;
+  bool _isUploading = false;
+
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+    );
+
+    if (image != null) {
+      setState(() {
+        _selectedImage = File(image.path);
+      });
+    }
+  }
+
+  Future<String?> _uploadImage(File imageFile) async {
+    try {
+      String fileName =
+          'user_images/${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final storageRef = _storage.ref().child(fileName);
+      final uploadTask = await storageRef.putFile(
+        imageFile,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+      return await uploadTask.ref.getDownloadURL();
+    } catch (e) {
+      debugPrint('Error uploading image: $e');
+      return null;
+    }
+  }
 
   void _sendMessage() async {
     String message = _messageController.text.trim();
-    if (message.isEmpty) return;
+    if (message.isEmpty && _selectedImage == null) return;
 
     User? currentUser = _auth.currentUser;
     if (currentUser == null) {
@@ -29,16 +65,35 @@ class _UserContactScreenState extends State<UserContactScreen> {
       return;
     }
 
+    setState(() {
+      _isUploading = true;
+    });
+
     try {
-      await _firestore.collection('user_messages').add({
+      String? imageUrl;
+      if (_selectedImage != null) {
+        imageUrl = await _uploadImage(_selectedImage!);
+      }
+
+      final messageData = {
         'userId': currentUser.uid,
         'userName': currentUser.displayName ?? 'Anonymous User',
         'message': message,
         'timestamp': FieldValue.serverTimestamp(),
         'status': 'unread',
-      });
+      };
+
+      if (imageUrl != null) {
+        messageData['image_url'] = imageUrl;
+      }
+
+      await _firestore.collection('user_messages').add(messageData);
 
       _messageController.clear();
+      setState(() {
+        _selectedImage = null;
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Message sent successfully'),
@@ -52,6 +107,10 @@ class _UserContactScreenState extends State<UserContactScreen> {
           backgroundColor: Colors.red,
         ),
       );
+    } finally {
+      setState(() {
+        _isUploading = false;
+      });
     }
   }
 
@@ -79,14 +138,12 @@ class _UserContactScreenState extends State<UserContactScreen> {
                         .snapshots(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(
-                          child: CircularProgressIndicator(),
-                        );
+                        return const Center(child: CircularProgressIndicator());
                       }
 
                       if (snapshot.hasError) {
-                        return const Center(
-                          child: Text('Error loading messages.'),
+                        return Center(
+                          child: Text('Error: ${snapshot.error}'),
                         );
                       }
 
@@ -96,44 +153,45 @@ class _UserContactScreenState extends State<UserContactScreen> {
                         );
                       }
 
-                      var messages = snapshot.data!.docs;
                       return ListView.builder(
                         reverse: true,
-                        itemCount: messages.length,
+                        itemCount: snapshot.data!.docs.length,
                         itemBuilder: (context, index) {
-                          var message = messages[index];
+                          var messageDoc = snapshot.data!.docs[index];
+                          var messageData =
+                              messageDoc.data() as Map<String, dynamic>;
+
                           return Column(
                             children: [
                               _buildMessageBubble(
-                                message: message['message'],
+                                message: messageData['message'] ?? '',
+                                imageUrl: messageData['image_url'],
                                 isMe: true,
-                                timestamp: message['timestamp'],
-                                status: message['status'],
+                                timestamp: messageData['timestamp'],
+                                status: messageData['status'],
                               ),
                               StreamBuilder<QuerySnapshot>(
-                                stream: message.reference
+                                stream: messageDoc.reference
                                     .collection('replies')
                                     .orderBy('timestamp')
                                     .snapshots(),
                                 builder: (context, repliesSnapshot) {
-                                  if (repliesSnapshot.hasError) {
+                                  if (!repliesSnapshot.hasData) {
                                     return const SizedBox.shrink();
                                   }
 
-                                  if (!repliesSnapshot.hasData ||
-                                      repliesSnapshot.data!.docs.isEmpty) {
-                                    return const SizedBox.shrink();
-                                  }
-
-                                  var replies = repliesSnapshot.data!.docs;
                                   return Column(
-                                    children: replies
-                                        .map((reply) => _buildMessageBubble(
-                                              message: reply['message'],
-                                              isMe: false,
-                                              timestamp: reply['timestamp'],
-                                            ))
-                                        .toList(),
+                                    children:
+                                        repliesSnapshot.data!.docs.map((reply) {
+                                      var replyData =
+                                          reply.data() as Map<String, dynamic>;
+                                      return _buildMessageBubble(
+                                        message: replyData['message'] ?? '',
+                                        imageUrl: replyData['image_url'],
+                                        isMe: false,
+                                        timestamp: replyData['timestamp'],
+                                      );
+                                    }).toList(),
                                   );
                                 },
                               ),
@@ -152,6 +210,7 @@ class _UserContactScreenState extends State<UserContactScreen> {
 
   Widget _buildMessageBubble({
     required String message,
+    String? imageUrl,
     required bool isMe,
     Timestamp? timestamp,
     String? status,
@@ -168,10 +227,29 @@ class _UserContactScreenState extends State<UserContactScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              message,
-              style: const TextStyle(fontSize: 16, color: Colors.black87),
-            ),
+            if (imageUrl != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  imageUrl,
+                  width: 200,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return const SizedBox(
+                      height: 200,
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  },
+                ),
+              ),
+            if (imageUrl != null && message.isNotEmpty)
+              const SizedBox(height: 8),
+            if (message.isNotEmpty)
+              Text(
+                message,
+                style: const TextStyle(fontSize: 16, color: Colors.black87),
+              ),
             const SizedBox(height: 4),
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -206,31 +284,70 @@ class _UserContactScreenState extends State<UserContactScreen> {
     return Container(
       padding: const EdgeInsets.all(8),
       color: Colors.white,
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            child: TextField(
-              controller: _messageController,
-              decoration: InputDecoration(
-                hintText: 'Type your message...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
+          if (_selectedImage != null)
+            Stack(
+              alignment: Alignment.topRight,
+              children: [
+                Container(
+                  height: 100,
+                  width: 100,
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    image: DecorationImage(
+                      image: FileImage(_selectedImage!),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                 ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.red),
+                  onPressed: () => setState(() => _selectedImage = null),
+                ),
+              ],
+            ),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.image),
+                onPressed: _pickImage,
+              ),
+              Expanded(
+                child: TextField(
+                  controller: _messageController,
+                  decoration: InputDecoration(
+                    hintText: 'Type your message...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                  ),
+                  maxLines: null,
                 ),
               ),
-              maxLines: null,
-            ),
-          ),
-          const SizedBox(width: 8),
-          CircleAvatar(
-            backgroundColor: Colors.blue.shade400,
-            child: IconButton(
-              icon: const Icon(Icons.send, color: Colors.white),
-              onPressed: _sendMessage,
-            ),
+              const SizedBox(width: 8),
+              CircleAvatar(
+                backgroundColor: Colors.blue.shade400,
+                child: _isUploading
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : IconButton(
+                        icon: const Icon(Icons.send, color: Colors.white),
+                        onPressed: _sendMessage,
+                      ),
+              ),
+            ],
           ),
         ],
       ),

@@ -63,6 +63,81 @@ class _AdminMessagesScreenState extends State<AdminMessagesScreen>
     return null;
   }
 
+  Widget _buildImagePreview(String imageUrl) {
+    return GestureDetector(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (context) => Dialog(
+            child: Stack(
+              children: [
+                InteractiveViewer(
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.contain,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Center(
+                        child: CircularProgressIndicator(
+                          value: loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded /
+                                  loadingProgress.expectedTotalBytes!
+                              : null,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.network(
+          imageUrl,
+          width: 200,
+          height: 200,
+          fit: BoxFit.cover,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return SizedBox(
+              width: 200,
+              height: 200,
+              child: Center(
+                child: CircularProgressIndicator(
+                  value: loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded /
+                          loadingProgress.expectedTotalBytes!
+                      : null,
+                ),
+              ),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              width: 200,
+              height: 200,
+              color: Colors.grey[300],
+              child: const Center(
+                child: Icon(Icons.error_outline, size: 40),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -122,7 +197,7 @@ class _AdminMessagesScreenState extends State<AdminMessagesScreen>
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children:  [
+        children: [
           Text(
             'User Messages',
             style: TextStyle(
@@ -145,15 +220,18 @@ class _AdminMessagesScreenState extends State<AdminMessagesScreen>
   }
 
   Widget _buildMessageCard(DocumentSnapshot messageDoc) {
+    Map<String, dynamic> messageData =
+        messageDoc.data() as Map<String, dynamic>;
+
     return FutureBuilder<Map<String, dynamic>?>(
-      future: _fetchUserDetails(messageDoc['userId']),
+      future: _fetchUserDetails(messageData['userId']),
       builder: (context, userSnapshot) {
         if (!userSnapshot.hasData) {
           return Card(
             margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
             child: ListTile(
               title: const Text('Loading user details...'),
-              subtitle: Text(messageDoc['message']),
+              subtitle: Text(messageData['message'] ?? ''),
             ),
           );
         }
@@ -168,7 +246,7 @@ class _AdminMessagesScreenState extends State<AdminMessagesScreen>
           child: ExpansionTile(
             tilePadding: const EdgeInsets.symmetric(horizontal: 16),
             title: Text(
-              userDetails['name'],
+              userDetails['name'] ?? 'Anonymous User',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Colors.blue,
@@ -177,8 +255,8 @@ class _AdminMessagesScreenState extends State<AdminMessagesScreen>
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Email: ${userDetails['email']}'),
-                Text('Phone: ${userDetails['phoneNumber']}'),
+                Text('Email: ${userDetails['email'] ?? 'N/A'}'),
+                Text('Phone: ${userDetails['phoneNumber'] ?? 'N/A'}'),
               ],
             ),
             children: [
@@ -191,7 +269,14 @@ class _AdminMessagesScreenState extends State<AdminMessagesScreen>
                       'Original Message:',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    Text(messageDoc['message']),
+                    if (messageData['image_url'] != null) ...[
+                      const SizedBox(height: 8),
+                      _buildImagePreview(messageData['image_url']),
+                    ],
+                    if (messageData['message']?.isNotEmpty ?? false) ...[
+                      const SizedBox(height: 8),
+                      Text(messageData['message']),
+                    ],
                     const SizedBox(height: 16),
                     StreamBuilder<QuerySnapshot>(
                       stream: messageDoc.reference
@@ -244,23 +329,30 @@ class _AdminMessagesScreenState extends State<AdminMessagesScreen>
   }
 
   Widget _buildReplyBubble(DocumentSnapshot replyDoc) {
+    Map<String, dynamic> replyData = replyDoc.data() as Map<String, dynamic>;
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: replyDoc['isAdmin'] ? Colors.blue.shade50 : Colors.grey.shade200,
+        color:
+            replyData['isAdmin'] ? Colors.blue.shade50 : Colors.grey.shade200,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            replyDoc['message'],
-            style: const TextStyle(fontSize: 14),
-          ),
+          if (replyData['image_url'] != null) ...[
+            _buildImagePreview(replyData['image_url']),
+            const SizedBox(height: 8),
+          ],
+          if (replyData['message']?.isNotEmpty ?? false)
+            Text(
+              replyData['message'],
+              style: const TextStyle(fontSize: 14),
+            ),
           const SizedBox(height: 4),
           Text(
-            _formatTimestamp(replyDoc['timestamp']),
+            _formatTimestamp(replyData['timestamp']),
             style: TextStyle(
               fontSize: 12,
               color: Colors.grey.shade600,

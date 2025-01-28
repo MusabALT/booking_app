@@ -15,25 +15,44 @@ class _AdminCalendarScreenState extends State<AdminCalendarScreen> {
   late DateTime _selectedDay;
   Map<DateTime, List<Map<String, dynamic>>> _events = {};
   bool _isLoading = true;
+  bool _isRefreshing = false;
   CalendarFormat _calendarFormat = CalendarFormat.month;
+  final Map<String, Map<String, dynamic>> _userCache = {};
 
   @override
   void initState() {
     super.initState();
     _focusedDay = DateTime.now();
     _selectedDay = DateTime.now();
-    _fetchBookingRequests();
+    _fetchBookingRequestsForMonth(_focusedDay);
   }
 
-  Future<void> _fetchBookingRequests() async {
+  Future<Map<String, dynamic>> _fetchUserData(String userId) async {
+    if (_userCache.containsKey(userId)) {
+      return _userCache[userId]!;
+    }
+
+    final userDoc =
+        await FirebaseFirestore.instance.collection('users').doc(userId).get();
+    final userData = userDoc.data() ?? {};
+    _userCache[userId] = userData;
+    return userData;
+  }
+
+  Future<void> _fetchBookingRequestsForMonth(DateTime month) async {
     setState(() {
       _isLoading = true;
     });
 
     try {
+      final startOfMonth = DateTime(month.year, month.month, 1);
+      final endOfMonth = DateTime(month.year, month.month + 1, 0);
+
       final snapshot = await FirebaseFirestore.instance
           .collection('roomRequests')
-          .orderBy('requestTime', descending: true)
+          .where('bookingDate', isGreaterThanOrEqualTo: startOfMonth)
+          .where('bookingDate', isLessThanOrEqualTo: endOfMonth)
+          .orderBy('bookingDate')
           .get();
 
       Map<DateTime, List<Map<String, dynamic>>> events = {};
@@ -42,18 +61,23 @@ class _AdminCalendarScreenState extends State<AdminCalendarScreen> {
         final data = doc.data();
         if (data.containsKey('bookingDate') && data['bookingDate'] != null) {
           final bookingDate = (data['bookingDate'] as Timestamp).toDate();
+          final normalizedDate = DateTime(
+            bookingDate.year,
+            bookingDate.month,
+            bookingDate.day,
+          );
+
+          if (events[normalizedDate] == null) {
+            events[normalizedDate] = [];
+          }
+
           final requestTime = (data['requestTime'] as Timestamp).toDate();
           final status = data['status'] as String;
           final userId = data['userId'] ?? '';
 
-
-          final userDoc = await FirebaseFirestore.instance
-              .collection('users')
-              .doc(userId)
-              .get();
-          final userData = userDoc.data();
-          final userName = userData?['name'] ?? 'Unknown User';
-          final userPhoneNumber = userData?['phoneNumber'] ?? 'N/A';
+          final userData = await _fetchUserData(userId);
+          final userName = userData['name'] ?? 'Unknown User';
+          final userPhoneNumber = userData['phoneNumber'] ?? 'N/A';
 
           final event = {
             'roomName': data['roomName'] ?? 'Unknown Room',
@@ -68,15 +92,6 @@ class _AdminCalendarScreenState extends State<AdminCalendarScreen> {
             'docId': doc.id,
           };
 
-          final normalizedDate = DateTime(
-            bookingDate.year,
-            bookingDate.month,
-            bookingDate.day,
-          );
-
-          if (events[normalizedDate] == null) {
-            events[normalizedDate] = [];
-          }
           events[normalizedDate]!.add(event);
         }
       }
@@ -91,6 +106,19 @@ class _AdminCalendarScreenState extends State<AdminCalendarScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  Future<void> _fetchBookingRequestsDebounced() async {
+    if (_isRefreshing) return;
+    setState(() {
+      _isRefreshing = true;
+    });
+
+    await _fetchBookingRequestsForMonth(_focusedDay);
+
+    setState(() {
+      _isRefreshing = false;
+    });
   }
 
   List<Map<String, dynamic>> _getEventsForDay(DateTime day) {
@@ -141,7 +169,7 @@ class _AdminCalendarScreenState extends State<AdminCalendarScreen> {
         ),
       );
 
-      _fetchBookingRequests();
+      _fetchBookingRequestsForMonth(_focusedDay);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -168,7 +196,7 @@ class _AdminCalendarScreenState extends State<AdminCalendarScreen> {
           actions: [
             IconButton(
               icon: const Icon(Icons.refresh),
-              onPressed: _fetchBookingRequests,
+              onPressed: _fetchBookingRequestsDebounced,
             ),
           ],
         ),
@@ -212,6 +240,7 @@ class _AdminCalendarScreenState extends State<AdminCalendarScreen> {
                       setState(() {
                         _focusedDay = focusedDay;
                       });
+                      _fetchBookingRequestsForMonth(focusedDay);
                     },
                     headerStyle: HeaderStyle(
                       titleCentered: true,

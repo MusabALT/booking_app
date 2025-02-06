@@ -99,7 +99,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       scale: _scaleAnimation,
                       child: const HomeTopBar(),
                     ),
-
                     SlideTransition(
                       position: Tween<Offset>(
                         begin: const Offset(-1.0, 0.0),
@@ -111,7 +110,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       )),
                       child: const BookingBlueContainer(),
                     ),
-
                     Expanded(
                       child: SlideTransition(
                         position: Tween<Offset>(
@@ -125,7 +123,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         child: RoomListView(),
                       ),
                     ),
-
                     ScaleTransition(
                       scale: CurvedAnimation(
                         parent: _slideController,
@@ -200,7 +197,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                       ),
                     ),
-
                     ScaleTransition(
                       scale: CurvedAnimation(
                         parent: _slideController,

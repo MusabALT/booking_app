@@ -259,57 +259,55 @@ class RoomListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('rooms')
-            .where('is_booked', isEqualTo: false)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return const Center(child: Text('Something went wrong'));
-          }
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('rooms')
+          .where('is_booked', isEqualTo: false)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const Center(child: Text('Something went wrong'));
+        }
 
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-          final rooms =
-              snapshot.data!.docs.map((doc) => Room.fromDocument(doc)).toList();
+        final rooms =
+            snapshot.data!.docs.map((doc) => Room.fromDocument(doc)).toList();
 
-          return ListView.builder(
-            itemCount: rooms.length,
-            itemBuilder: (context, index) {
-              final room = rooms[index];
-              return Card(
-                margin: const EdgeInsets.all(10.0),
-                child: ListTile(
-                  leading: room.imagePath.isNotEmpty
-                      ? Image.network(
-                          room.imagePath,
-                          width: 50,
-                          height: 50,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(Icons.error);
-                          },
-                        )
-                      : const Icon(Icons.hotel),
-                  title: Text(room.name),
-                  subtitle:
-                      Text('Floor: ${room.floor}, Capacity: ${room.capacity}'),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: () {
-                      _requestBooking(context, room);
-                    },
-                  ),
+        return ListView.builder(
+          itemCount: rooms.length,
+          itemBuilder: (context, index) {
+            final room = rooms[index];
+            return Card(
+              margin: const EdgeInsets.all(10.0),
+              child: ListTile(
+                leading: room.imagePath.isNotEmpty
+                    ? Image.network(
+                        room.imagePath,
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(Icons.error);
+                        },
+                      )
+                    : const Icon(Icons.hotel),
+                title: Text(room.name),
+                subtitle:
+                    Text('Floor: ${room.floor}, Capacity: ${room.capacity}'),
+                trailing: IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: () {
+                    _requestBooking(context, room);
+                  },
                 ),
-              );
-            },
-          );
-        },
-      ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
